@@ -1,0 +1,16 @@
+Searching 35 files for "proxy-reverse"
+
+0 matches
+
+Searching 26 files for "proxy-reverse"
+
+/Users/fernando/Documents/workspace/docker/swarm-stack/reverse-proxy/deploy.sh:
+    1: export $(cat ../.env) && docker stack deploy -c stack-proxy-reverse.yml proxy-reverse
+    2  
+
+2 matches in 1 file
+
+
+Searching 26 files for "proxy-reverse"
+
+0 matches

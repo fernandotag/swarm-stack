@@ -1,0 +1,70 @@
+version: "3.8"
+
+networks:
+  frontend:
+    driver: overlay
+    driver_opts:
+      encrypted: ""
+    external: true
+    attachable: true
+    name: frontend
+  backend:
+    driver: overlay
+    driver_opts:
+      encrypted: ""
+    external: true
+    attachable: true
+    name: backend
+
+services:
+  agent:
+    image: portainer/agent
+    depends_on:
+      - backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/volumes:/var/lib/docker/volumes
+    networks:
+      - backend
+    deploy:
+      mode: global
+      placement:
+        constraints: [node.platform.os == linux] 
+       
+  portainer:
+    image: portainer/portainer:latest
+    depends_on:
+      - traefik
+    command: -H unix:///var/run/docker.sock
+    networks:
+      - frontend
+      - backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - portainer_data:/data 
+    environment:
+      - TZ=${TZ}
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      mode: replicated
+      replicas: 1
+      labels:
+        - "traefik.docker.lbswarm=true"
+        - "traefik.enable=true"
+        - "traefik.http.routers.portainer.entrypoints=websecure"
+        - "traefik.http.routers.portainer.rule=Host(`portainer.${DOMAINNAME}`)"
+        - "traefik.http.routers.portainer.tls=true"
+        - "traefik.http.routers.portainer.tls.certresolver=dns-cloudflare" # Comment out this line after first run of traefik to force the use of wildcard certs
+        - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+
+volumes:
+    portainer_data: {}
+  
